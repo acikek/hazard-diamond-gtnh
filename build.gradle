@@ -947,6 +947,7 @@ idea {
                 "Run Client (IJ Native)"(Application) {
                     mainClass = "GradleStart"
                     moduleName = project.name + ".main"
+                    includeProvidedDependencies = true
                     afterEvaluate {
                         workingDirectory = tasks.runClient.workingDir.absolutePath
                         programParameters = tasks.runClient.calculateArgs(project).collect { '"' + it + '"' }.join(' ')
@@ -958,6 +959,7 @@ idea {
                 "Run Server (IJ Native)"(Application) {
                     mainClass = "GradleStartServer"
                     moduleName = project.name + ".main"
+                    includeProvidedDependencies = true
                     afterEvaluate {
                         workingDirectory = tasks.runServer.workingDir.absolutePath
                         programParameters = tasks.runServer.calculateArgs(project).collect { '"' + it + '"' }.join(' ')
