@@ -990,8 +990,6 @@ idea {
                     else
                         throw GradleScriptException('Accepted value for ideaOverrideBuildType is one of gradle or idea.')
 
-                    print(options)
-
                     options.each { k, v ->
                         gradleSettings.findFirstOrAppendChild('option', ['name': k]).attributes().value = v
                     }
