@@ -127,6 +127,9 @@ propertyDefaultIfUnset("gradleTokenGroupName", "")
 propertyDefaultIfUnset("enableModernJavaSyntax", false) // On by default for new projects only
 propertyDefaultIfUnset("enableGenericInjection", false) // On by default for new projects only
 
+// this is meant to be set using the user wide property file. by default we do nothing.
+propertyDefaultIfUnset("ideaOverrideBuildType", "")
+
 project.extensions.add(Blowdryer, "Blowdryer", Blowdryer) // Make blowdryer available in "apply from:" scripts
 if (!disableSpotless) {
     apply plugin: 'com.diffplug.spotless'
@@ -969,6 +972,40 @@ idea {
                     moduleJavacAdditionalOptions = [
                         (project.name + ".main"): tasks.compileJava.options.compilerArgs.collect { '"' + it + '"' }.join(' ')
                     ]
+                }
+            }
+            if (ideaOverrideBuildType != "") {
+                // only modify the build type if user has expressed a desire for change
+                withIDEAFileXml("gradle.xml") {
+                    def gradleSettings = it.asNode()
+                        .findFirstOrAppendChild('component', ['name': 'GradleSettings'])
+                        .findFirstOrAppendChild('option', ['name': 'linkedExternalProjectsSettings'])
+                        .findFirstOrAppendChild('GradleProjectSettings')
+
+                    def options
+                    if ("gradle".equalsIgnoreCase(ideaOverrideBuildType))
+                        options = ['delegatedBuild': 'true', 'testRunner': 'GRADLE']
+                    else if ("idea".equalsIgnoreCase(ideaOverrideBuildType))
+                        options = ['delegatedBuild': 'false', 'testRunner': 'PLATFORM']
+                    else
+                        throw GradleScriptException('Accepted value for ideaOverrideBuildType is one of gradle or idea.')
+
+                    print(options)
+
+                    options.each { k, v ->
+                        gradleSettings.findFirstOrAppendChild('option', ['name': k]).attributes().value = v
+                    }
+                }
+            }
+            withIDEAFileXml("misc.xml") {
+                def output = it.asNode()
+                    .findFirstOrAppendChild('component', ['name': 'ProjectRootManager', 'version': '2', 'default': 'true'])
+                    .findFirstOrAppendChild('output')
+                println(output)
+                if (!output.attributes().url) {
+                    // only modify the output url if it doesn't yet have one, or if the existing one is blank somehow
+					// this is a sensible default for most setup
+                    output.attributes().url = 'file://$PROJECT_DIR$/build/ideaBuild'
                 }
             }
         }
