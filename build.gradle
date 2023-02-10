@@ -1004,7 +1004,7 @@ idea {
                 println(output)
                 if (!output.attributes().url) {
                     // only modify the output url if it doesn't yet have one, or if the existing one is blank somehow
-					// this is a sensible default for most setup
+                    // this is a sensible default for most setup
                     output.attributes().url = 'file://$PROJECT_DIR$/build/ideaBuild'
                 }
             }
