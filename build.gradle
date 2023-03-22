@@ -455,6 +455,12 @@ sourceSets {
             runtimeClasspath += sourceSets.patchedMc.output + sourceSets.mcLauncher.output
         }
     }
+    // This ensures that VSCode knows where the minecraft classes are
+    main {
+        java {
+            compileClasspath += sourceSets.patchedMc.output + sourceSets.mcLauncher.output
+        }
+    }
 }
 
 if (file('addon.gradle').exists()) {
