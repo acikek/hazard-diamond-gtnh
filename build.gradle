@@ -26,34 +26,32 @@ import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.concurrent.TimeUnit
 
+// TODO: Instead of using the buildscript block, update all mods' settings.gradle pluginManagement blocks to include GTNHGradle
+
 buildscript {
     repositories {
-        mavenCentral()
-
-        maven {
-            name 'forge'
-            url 'https://maven.minecraftforge.net'
-        }
         maven {
             // GTNH RetroFuturaGradle and ASM Fork
             name "GTNH Maven"
             url "http://jenkins.usrv.eu:8081/nexus/content/groups/public/"
             allowInsecureProtocol = true
+            mavenContent {
+                includeGroup("com.gtnewhorizons.retrofuturagradle")
+                includeGroup("com.gtnewhorizons.gtnhgradle")
+                includeGroup("com.gtnewhorizons")
+            }
         }
-        maven {
-            name 'sonatype'
-            url 'https://oss.sonatype.org/content/repositories/snapshots/'
-        }
-        maven {
-            name 'Scala CI dependencies'
-            url 'https://repo1.maven.org/maven2/'
-        }
-
+        mavenCentral()
         mavenLocal()
     }
+
+    dependencies {
+        classpath 'com.gtnewhorizons.gtnhgradle:com.gtnewhorizons.gtnhgradle.gradle.plugin:0.0.3'
+    }
 }
+
 plugins {
-    id 'com.gtnewhorizons.gtnhgradle' version '24345cc'
+    // id 'com.gtnewhorizons.gtnhgradle' version '0.0.3' // TODO: Add once settings.gradle migrated
     id "org.jetbrains.gradle.plugin.idea-ext" version "1.1.7"
     id 'eclipse'
     id 'scala'
@@ -69,6 +67,9 @@ plugins {
     id 'com.modrinth.minotaur' version '2.+' apply false
     id 'com.matthewprenger.cursegradle' version '1.4.0' apply false
 }
+
+apply plugin: 'com.gtnewhorizons.gtnhgradle' // TODO: remove once settings.gradle migrated
+
 boolean settingsupdated = verifySettingsGradle()
 settingsupdated = verifyGitAttributes() || settingsupdated
 if (settingsupdated)
