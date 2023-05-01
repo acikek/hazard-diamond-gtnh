@@ -8,6 +8,7 @@ pluginManagement {
             allowInsecureProtocol = true
             mavenContent {
                 includeGroup("com.gtnewhorizons.retrofuturagradle")
+                includeGroup("com.gtnewhorizons.gtnhgradle")
             }
         }
         gradlePluginPortal()
