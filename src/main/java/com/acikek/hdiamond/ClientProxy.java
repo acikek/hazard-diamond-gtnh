@@ -1,4 +1,4 @@
-package com.myname.mymodid;
+package com.acikek.hdiamond;
 
 public class ClientProxy extends CommonProxy {
 
