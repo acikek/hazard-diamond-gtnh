@@ -13,14 +13,12 @@ import com.acikek.hdiamond.core.quadrant.HealthHazard;
 import com.acikek.hdiamond.core.quadrant.Reactivity;
 import com.acikek.hdiamond.core.quadrant.SpecificHazard;
 import com.acikek.hdiamond.network.HDNetworking;
-import mcp.mobius.waila.api.ITooltip;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
-import org.jetbrains.annotations.NotNull;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.IChatComponent;
+import net.minecraft.util.ResourceLocation;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -94,33 +92,9 @@ import java.util.stream.Collectors;
 public class HazardDiamondAPI {
 
     /**
-     * @param id the ID of the hazard data object
-     * @return whether the data object exists and is loaded from a data pack source
-     */
-    public static boolean hasData(Identifier id) {
-        return HazardDiamondAPIImpl.getData(id) != null;
-    }
-
-    /**
-     * Retrieves loaded hazard data from the {@code hazard_data} data pack source.
-     * @param id the ID of the hazard data object
-     * @return the data object, if any
-     * @throws IllegalStateException if the data object does not exist
-     * @see HazardDiamondAPI#hasData(Identifier) 
-     */
-    public static @NotNull HazardData getData(Identifier id) {
-        var result = HazardDiamondAPIImpl.getData(id);
-        if (result == null) {
-            throw new IllegalStateException("hazard data '" + id + "' does not exist");
-        }
-        return result;
-    }
-
-    /**
      * Opens an immutable {@link HazardScreen} on the client.
      * @param holder the holder of the hazard data object to display
      */
-    @Environment(EnvType.CLIENT)
     public static void open(HazardDataHolder holder) {
         HazardDiamondAPIImpl.setScreen(new HazardScreen(holder.getHazardData()));
     }
@@ -132,18 +106,18 @@ public class HazardDiamondAPI {
      * @throws NullPointerException if the id is null
      * @see HazardScreenEdited#EVENT
      */
-    @Environment(EnvType.CLIENT)
-    public static void openMutable(HazardDataHolder holder, @NotNull Identifier id) {
+    @SideOnly(Side.CLIENT)
+    public static void openMutable(HazardDataHolder holder, ResourceLocation id) {
         Objects.requireNonNull(id);
         HazardDiamondAPIImpl.setScreen(new HazardScreen(holder.getHazardData(), id));
     }
 
     /**
      * Opens a mutable {@link HazardScreen} on the client with blank starting data.
-     * @see HazardDiamondAPI#openMutable(HazardDataHolder, Identifier) 
+     * @see HazardDiamondAPI#openMutable(HazardDataHolder, ResourceLocation)
      */
-    @Environment(EnvType.CLIENT)
-    public static void openMutable(Identifier id) {
+    @SideOnly(Side.CLIENT)
+    public static void openMutable(ResourceLocation id) {
         openMutable(HazardData.empty(), id);
     }
 
@@ -152,14 +126,14 @@ public class HazardDiamondAPI {
      * @param players the players to target
      * @param holder the holder of the hazard data object to display
      */
-    public static void open(Collection<ServerPlayerEntity> players, HazardDataHolder holder) {
+    public static void open(Collection<EntityPlayerMP> players, HazardDataHolder holder) {
         HDNetworking.s2cOpenScreen(players, holder);
     }
 
     /**
      * @see HazardDiamondAPI#open(Collection, HazardDataHolder)
      */
-    public static void open(ServerPlayerEntity player, HazardDataHolder holder) {
+    public static void open(EntityPlayerMP player, HazardDataHolder holder) {
         open(Collections.singletonList(player), holder);
     }
 
@@ -210,23 +184,23 @@ public class HazardDiamondAPI {
     /**
      * Appends {@code WAILA} data converted from the specified holder to the NBT compound.
      */
-    public static void appendWailaServerData(NbtCompound nbt, HazardDataHolder holder) {
-        var tooltips = holder.getHazardData().getTooltip().stream()
-                .map(Text.Serializer::toJson)
-                .toList();
-        nbt.putString("WNumerals", tooltips.get(0));
-        nbt.putString("WPictograms", tooltips.get(1));
+    public static void appendWailaServerData(NBTTagCompound nbt, HazardDataHolder holder) {
+        List<String> tooltips = holder.getHazardData().getTooltip().stream()
+                .map(IChatComponent.Serializer::func_150696_a)
+                .collect(Collectors.toList());
+        nbt.setString("WNumerals", tooltips.get(0));
+        nbt.setString("WPictograms", tooltips.get(1));
     }
 
     /**
      * Fetches {@code WAILA} data from an NBT compound and appends the text lines in some way.
      * @param lineAdder a function such as {@link ITooltip#addLine(Text)}
      */
-    public static void appendWailaTooltip(NbtCompound nbt, Consumer<Text> lineAdder) {
-        if (!nbt.contains("WNumerals")) {
+    public static void appendWailaTooltip(NBTTagCompound nbt, Consumer<IChatComponent> lineAdder) {
+        if (!nbt.hasKey("WNumerals")) {
             return;
         }
-        lineAdder.accept(Text.Serializer.fromJson(nbt.getString("WNumerals")));
-        lineAdder.accept(Text.Serializer.fromJson(nbt.getString("WPictograms")));
+        lineAdder.accept(IChatComponent.Serializer.func_150699_a(nbt.getString("WNumerals")));
+        lineAdder.accept(IChatComponent.Serializer.func_150699_a(nbt.getString("WPictograms")));
     }
 }

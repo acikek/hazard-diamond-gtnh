@@ -61,24 +61,44 @@ public enum SpecificHazard implements QuadrantSection<SpecificHazard> {
 
     @Override
     public IChatComponent getSymbol() {
-        var text = switch (this) {
-            case NONE -> new ChatComponentText("");
-            case REACTS_WITH_WATER -> new ChatComponentText(EnumChatFormatting.STRIKETHROUGH + "W");
-            case OXIDIZER -> new ChatComponentText("OX");
-            case SIMPLE_ASPHYXIANT -> new ChatComponentText("SA");
-            case RADIOACTIVE -> new ChatComponentText("R");
-        };
+        IChatComponent text;
+        switch (this) {
+            case NONE:
+                text = new ChatComponentText("");
+                break;
+            case REACTS_WITH_WATER:
+                text = new ChatComponentText(EnumChatFormatting.STRIKETHROUGH + "W");
+                break;
+            case OXIDIZER:
+                text = new ChatComponentText("OX");
+                break;
+            case SIMPLE_ASPHYXIANT:
+                text = new ChatComponentText("SA");
+                break;
+            case RADIOACTIVE:
+                text = new ChatComponentText("R");
+                break;
+            default:
+                throw new IllegalArgumentException();
+        }
         return text.setChatStyle(new ChatStyle().setColor(EnumChatFormatting.WHITE));
     }
 
     @Override
     public EnumChatFormatting getLevelColor() {
-        return switch (this) {
-            case NONE -> EnumChatFormatting.GRAY;
-            case REACTS_WITH_WATER -> EnumChatFormatting.DARK_AQUA;
-            case OXIDIZER -> EnumChatFormatting.RED;
-            case SIMPLE_ASPHYXIANT -> EnumChatFormatting.GOLD;
-            case RADIOACTIVE -> EnumChatFormatting.DARK_GREEN;
-        };
+        switch (this) {
+            case NONE:
+                return EnumChatFormatting.GRAY;
+            case REACTS_WITH_WATER:
+                return EnumChatFormatting.DARK_AQUA;
+            case OXIDIZER:
+                return EnumChatFormatting.RED;
+            case SIMPLE_ASPHYXIANT:
+                return EnumChatFormatting.GOLD;
+            case RADIOACTIVE:
+                return EnumChatFormatting.DARK_GREEN;
+            default:
+                throw new IllegalArgumentException();
+        }
     }
 }

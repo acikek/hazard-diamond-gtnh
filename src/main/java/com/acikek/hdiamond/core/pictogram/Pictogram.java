@@ -1,8 +1,9 @@
 package com.acikek.hdiamond.core.pictogram;
 
 import com.acikek.hdiamond.core.section.DiamondSection;
+import io.netty.buffer.ByteBuf;
+import net.minecraft.entity.DataWatcher;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.network.PacketBuffer;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -38,21 +39,8 @@ public enum Pictogram implements DiamondSection<Pictogram> {
         return "ghs.hdiamond";
     }
 
-    /*public static Set<Pictogram> fromJson(JsonObject obj) {
-        Set<Pictogram> result = new HashSet<>();
-        for (var pictogram : JsonHelper.getArray(obj, "pictograms")) {
-            String str = pictogram.getAsString();
-            Pictogram p = EnumUtils.getEnumIgnoreCase(Pictogram.class, str);
-            if (p == null) {
-                throw new JsonParseException("unrecognized pictogram '" + str + "'");
-            }
-            result.add(p);
-        }
-        return result;
-    }*/
-
     public static void writeNbt(NBTTagCompound nbt, Set<Pictogram> pictograms) {
-        var ints = pictograms.stream()
+        int[] ints = pictograms.stream()
                 .map(Enum::ordinal)
                 .sorted()
                 .mapToInt(i -> i)
@@ -66,18 +54,42 @@ public enum Pictogram implements DiamondSection<Pictogram> {
                 .collect(Collectors.toSet());
     }
 
-    public static void write(PacketBuffer buf, Set<Pictogram> pictograms) {
+    public static void write(ByteBuf buf, Set<Pictogram> pictograms) {
         buf.writeInt(pictograms.size());
-        for (var pictogram : pictograms) {
+        for (Pictogram pictogram : pictograms) {
             buf.writeInt(pictogram.ordinal());
         }
     }
 
-    public static Set<Pictogram> read(PacketBuffer buf) {
+    public static Set<Pictogram> read(ByteBuf buf) {
         Set<Pictogram> result = new HashSet<>();
         int size = buf.readInt();
         for (int i = 0; i < size; i++) {
             result.add(Pictogram.values()[buf.readInt()]);
+        }
+        return result;
+    }
+
+    public static void initDataWatcher(DataWatcher watcher) {
+        watcher.addObject(6, 0b0);
+    }
+
+    public static void writeDataWatcher(DataWatcher watcher, Set<Pictogram> pictograms) {
+        int result = 0b0;
+        for (Pictogram pictogram : pictograms) {
+            result += 0b1 << pictogram.ordinal();
+        }
+        watcher.updateObject(6, result);
+    }
+
+    public static Set<Pictogram> readDataWatcher(DataWatcher watcher) {
+        Set<Pictogram> result = new HashSet<>();
+        int data = watcher.getWatchableObjectInt(6);
+        for (int i = 0; i < Pictogram.values().length; i++) {
+            int value = data & (0b1 << i);
+            if (value == 1) {
+                result.add(Pictogram.values()[i]);
+            }
         }
         return result;
     }

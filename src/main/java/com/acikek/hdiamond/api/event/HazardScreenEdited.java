@@ -4,6 +4,7 @@ import com.acikek.hdiamond.api.HazardDiamondAPI;
 import com.acikek.hdiamond.api.util.HazardDataHolder;
 import com.acikek.hdiamond.client.screen.HazardScreen;
 import com.acikek.hdiamond.core.HazardData;
+import cpw.mods.fml.common.eventhandler.Event;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.event.Event;

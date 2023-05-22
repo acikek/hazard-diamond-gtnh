@@ -3,21 +3,23 @@ package com.acikek.hdiamond.core;
 import com.acikek.hdiamond.api.util.HazardDataHolder;
 import com.acikek.hdiamond.core.pictogram.Pictogram;
 import com.acikek.hdiamond.core.quadrant.SpecificHazard;
+import io.netty.buffer.ByteBuf;
+import net.minecraft.entity.DataWatcher;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.*;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
-public record HazardData(HazardDiamond diamond, Set<Pictogram> pictograms) implements HazardDataHolder {
+public class HazardData implements HazardDataHolder {
 
-    /*public static final TrackedDataHandler<HazardData> DATA_TRACKER = TrackedDataHandler.of(
-            (buf, data) -> data.write(buf),
-            HazardData::read
-    );*/
+    private final HazardDiamond diamond;
+    private final Set<Pictogram> pictograms;
+
+    public HazardData(HazardDiamond diamond, Set<Pictogram> pictograms) {
+        this.diamond = diamond;
+        this.pictograms = pictograms;
+    }
 
     @Override
     public HazardData getHazardData() {
@@ -28,16 +30,6 @@ public record HazardData(HazardDiamond diamond, Set<Pictogram> pictograms) imple
         return new HazardData(HazardDiamond.empty(), new HashSet<>());
     }
 
-    /*public static HazardData fromJson(JsonObject obj) {
-        HazardDiamond diamond = obj.has("diamond")
-                ? HazardDiamond.fromJson(Jso.getObject(obj, "diamond"))
-                : HazardDiamond.empty();
-        Set<Pictogram> pictograms = obj.has("pictograms")
-                ? Pictogram.fromJson(obj)
-                : Collections.emptySet();
-        return new HazardData(diamond, pictograms);
-    }*/
-
     public NBTTagCompound toNbt() {
         NBTTagCompound nbt = new NBTTagCompound();
         nbt.setTag("Diamond", diamond.toNbt());
@@ -46,19 +38,35 @@ public record HazardData(HazardDiamond diamond, Set<Pictogram> pictograms) imple
     }
 
     public static HazardData fromNbt(NBTTagCompound nbt) {
-        var diamond = HazardDiamond.fromNbt(nbt.getCompoundTag("Diamond"));
-        var pictograms = Pictogram.readNbt(nbt);
+        HazardDiamond diamond = HazardDiamond.fromNbt(nbt.getCompoundTag("Diamond"));
+        Set<Pictogram> pictograms = Pictogram.readNbt(nbt);
         return new HazardData(diamond, pictograms);
     }
 
-    public void write(PacketBuffer buf) {
+    public void write(ByteBuf buf) {
         diamond.write(buf);
         Pictogram.write(buf, pictograms);
     }
 
     public static HazardData read(PacketBuffer buf) {
-        var diamond = HazardDiamond.read(buf);
-        var pictograms = Pictogram.read(buf);
+        HazardDiamond diamond = HazardDiamond.read(buf);
+        Set<Pictogram> pictograms = Pictogram.read(buf);
+        return new HazardData(diamond, pictograms);
+    }
+
+    public static void initDataWatcher(DataWatcher watcher) {
+        HazardDiamond.initDataWatcher(watcher);
+        Pictogram.initDataWatcher(watcher);
+    }
+
+    public void writeDataWatcher(DataWatcher watcher) {
+        diamond.writeDataWatcher(watcher);
+        Pictogram.writeDataWatcher(watcher, pictograms);
+    }
+
+    public static HazardData readDataWatcher(DataWatcher watcher) {
+        HazardDiamond diamond = HazardDiamond.readDataWatcher(watcher);
+        Set<Pictogram> pictograms = Pictogram.readDataWatcher(watcher);
         return new HazardData(diamond, pictograms);
     }
 
@@ -72,18 +80,26 @@ public record HazardData(HazardDiamond diamond, Set<Pictogram> pictograms) imple
 
     public List<IChatComponent> getTooltip() {
         List<IChatComponent> result = new ArrayList<>();
-        var sep = new ChatComponentText(EnumChatFormatting.GRAY + "-");
-        var numerals = diamond().fire().get().getSymbol()
+        IChatComponent sep = new ChatComponentText(EnumChatFormatting.GRAY + "-");
+        IChatComponent numerals = diamond().fire().get().getSymbol()
                 .appendSibling(sep).appendSibling(diamond().health().get().getSymbol())
                 .appendSibling(sep).appendSibling(diamond().reactivity().get().getSymbol());
         if (diamond().specific().get() != SpecificHazard.NONE) {
             numerals.appendSibling(sep).appendSibling(diamond().specific().get().getSymbol());
         }
         result.add(numerals);
-        var pictograms = new ChatComponentTranslation("tooltip.hdiamond.panel_item.pictograms", pictograms().size())
+        IChatComponent pictograms = new ChatComponentTranslation("tooltip.hdiamond.panel_item.pictograms", pictograms().size())
                 .setChatStyle(new ChatStyle().setColor(EnumChatFormatting.GRAY));
         result.add(pictograms);
         return result;
+    }
+
+    public HazardDiamond diamond() {
+        return diamond;
+    }
+
+    public Set<Pictogram> pictograms() {
+        return pictograms;
     }
 
     @Override
@@ -107,8 +123,4 @@ public record HazardData(HazardDiamond diamond, Set<Pictogram> pictograms) imple
         result = 31 * result + pictograms.hashCode();
         return result;
     }
-
-    /*public static void register() {
-        TrackedDataHandlerRegistry.register(DATA_TRACKER);
-    }*/
 }

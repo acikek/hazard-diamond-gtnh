@@ -1,6 +1,7 @@
 package com.acikek.hdiamond;
 
 import com.myname.mymodid.Tags;
+import net.minecraft.util.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -16,8 +17,12 @@ public class HDiamond {
 
     public static final Logger LOG = LogManager.getLogger(Tags.MODID);
 
-    @SidedProxy(clientSide = "com.acikek.hdiamond.ClientProxy", serverSide = "com.acikek.hdiamond.CommonProxy")
+    @SidedProxy(clientSide = "com.acikek.hdiamond.client.HDiamondClient", serverSide = "com.acikek.hdiamond.CommonProxy")
     public static CommonProxy proxy;
+
+    public static ResourceLocation id(String path) {
+        return new ResourceLocation(Tags.MODID, path);
+    }
 
     @Mod.EventHandler
     // preInit "Run before anything else. Read your config, create blocks, items, etc, and register them with the
